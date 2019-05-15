@@ -1,4 +1,6 @@
 # GraphQL Compiler (graphqlc)
+[![Go Report Card](https://goreportcard.com/badge/github.com/samlitowitz/graphqlc)](https://goreportcard.com/report/github.com/samlitowitz/graphqlc)
+[![GoDoc](https://godoc.org/github.com/samlitowitz/graphqlc/pkg/graphqlc?status.svg)](https://godoc.org/github.com/samlitowitz/graphqlc/pkg/graphqlc)
 
 `graphqlc` is a `protoc` style code generator for GraphQL.
  The project attempts to adhere to `protoc` standards whenever possible.
