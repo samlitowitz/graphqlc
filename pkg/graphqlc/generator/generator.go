@@ -245,7 +245,7 @@ func buildFileTypeMap(fd *FileDescriptor) error {
 		case *ast.UnionDefinition:
 			fd.typeMap[def.Name.Value] = new(graphqlc.UnionTypeDefinitionDescriptorProto)
 		case *ast.EnumDefinition:
-			fd.typeMap[def.Name.Value] = new(graphqlc.EnumValueDescriptorProto)
+			fd.typeMap[def.Name.Value] = new(graphqlc.EnumTypeDefinitionDescriptorProto)
 		case *ast.InputObjectDefinition:
 			fd.typeMap[def.Name.Value] = new(graphqlc.InputObjectTypeDefinitionDescriptorProto)
 
@@ -270,15 +270,17 @@ func buildEnumDefinitionDescriptor(fd *FileDescriptor, desc *graphqlc.EnumTypeDe
 	desc.Directives = directiveDescs
 
 	for _, enumValDef := range node.Values {
-		enumValDesc := &graphqlc.EnumValueDefinitionDescription{
-			Description: enumValDef.Description.Value,
-			Value:       enumValDef.Name.Value,
-		}
 		directiveDescs, err := buildDirectiveDescriptors(enumValDef.Directives)
 		if err != nil {
 			return err
 		}
-		enumValDesc.Directives = directiveDescs
+		enumValDesc := &graphqlc.EnumValueDefinitionDescription{
+			Value:      enumValDef.Name.Value,
+			Directives: directiveDescs,
+		}
+		if enumValDef.Description != nil {
+			enumValDesc.Description = enumValDef.Description.Value
+		}
 		desc.Values = append(desc.Values, enumValDesc)
 	}
 
