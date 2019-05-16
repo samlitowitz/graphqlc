@@ -31,15 +31,20 @@ const GRAPHQLC_VERSION_SUFFIX = "alpha"
 
 type FileDescriptor struct {
 	*graphqlc.FileDescriptorGraphql
+	path    string
 	doc     *ast.Document
 	typeMap map[string]interface{}
+}
+
+type PluginMeta struct {
+	Params, Path string
 }
 
 type Generator struct {
 	Request  *compiler.CodeGeneratorRequest
 	Response *compiler.CodeGeneratorResponse
 
-	PluginParams map[string]string // Map from plugin suffix to parameters
+	PluginParams map[string]*PluginMeta // Map from plugin suffix to parameters
 
 	genFiles []*FileDescriptor // Files to be generated
 	file     *FileDescriptor   // File we are compiling now
@@ -67,16 +72,13 @@ func (g *Generator) Fail(msgs ...string) {
 }
 
 func (g *Generator) CommandLineArguments(arguments []string) {
-	g.PluginParams = make(map[string]string)
+	g.PluginParams = make(map[string]*PluginMeta)
 	g.genFiles = make([]*FileDescriptor, 0)
 
 	for _, arg := range arguments {
 		if arg[:2] == "--" {
-			suffix, params := parsePluginArgument(arg[2:])
-			if suffix == "" {
-				g.Fail("invalid output specification %q", arg)
-			}
-			g.PluginParams[suffix] = params
+			suffix, params, path := parsePluginArgument(arg[2:])
+			g.PluginParams[suffix] = &PluginMeta{Params: params, Path: path}
 		} else {
 			files, err := filepath.Glob(arg)
 			if err != nil {
@@ -179,9 +181,9 @@ func (g *Generator) GenerateAllFiles() {
 	var stdout, stderr bytes.Buffer
 	os.Setenv("PATH", os.Getenv("PATH")+":"+os.Getenv("GOPATH")+"/bin")
 
-	for suffix, params := range g.PluginParams {
+	for suffix, meta := range g.PluginParams {
 		stdout.Reset()
-		g.Request.Parameter = params
+		g.Request.Parameter = meta.Params
 
 		data, err := proto.Marshal(g.Request)
 		if err != nil {
@@ -204,7 +206,7 @@ func (g *Generator) GenerateAllFiles() {
 		}
 
 		for _, file := range g.Response.File {
-			err := writeFile(file)
+			err := writeFile(meta.Path, file)
 			if err != nil {
 				g.Error(err)
 			}
@@ -656,16 +658,25 @@ func buildValueDescriptor(value ast.Value) (graphqlc.ValueDescriptorProto_Value,
 }
 
 // Utility functions
-func parsePluginArgument(arg string) (suffix, params string) {
+func parsePluginArgument(arg string) (suffix, params, path string) {
+	cLoc := strings.Index(arg, ":")
 	eqLoc := strings.Index(arg, "_out=")
 	if eqLoc == -1 {
-		return "", ""
+		return "", "", ""
 	}
-	return arg[:eqLoc], arg[eqLoc+5:]
+	if cLoc == -1 {
+		return arg[:eqLoc], "", arg[eqLoc+5:]
+	}
+	return arg[:eqLoc], arg[eqLoc+5 : cLoc], arg[cLoc+1:]
 }
 
-func writeFile(file *compiler.CodeGeneratorResponse_File) error {
-	f, err := os.Create(file.Name)
+func writeFile(path string, file *compiler.CodeGeneratorResponse_File) error {
+	qualifiedName := filepath.Clean(filepath.Join(path, file.Name))
+	err := os.MkdirAll(filepath.Dir(qualifiedName), 0755)
+	if err != nil {
+		return err
+	}
+	f, err := os.Create(qualifiedName)
 	if err != nil {
 		return err
 	}
