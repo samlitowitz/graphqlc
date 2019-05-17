@@ -671,7 +671,7 @@ func parsePluginArgument(arg string) (suffix, params, path string) {
 }
 
 func writeFile(path string, file *compiler.CodeGeneratorResponse_File) error {
-	qualifiedName := filepath.Clean(filepath.Join(path, file.Name))
+	qualifiedName := filepath.Join(path, file.Name)
 	err := os.MkdirAll(filepath.Dir(qualifiedName), 0755)
 	if err != nil {
 		return err
