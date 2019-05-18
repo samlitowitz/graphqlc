@@ -172,6 +172,19 @@ func (g *Generator) BuildTypes() {
 				g.Fail("unknown type")
 			}
 		}
+
+		if fd.FileDescriptorGraphql.Schema == nil {
+			fd.FileDescriptorGraphql.Schema = &graphqlc.SchemaDescriptorProto{}
+			if desc, ok := fd.typeMap["Query"]; ok {
+				fd.FileDescriptorGraphql.Schema.Query = desc.(*graphqlc.ObjectTypeDefinitionDescriptorProto)
+			}
+			if desc, ok := fd.typeMap["Mutation"]; ok {
+				fd.FileDescriptorGraphql.Schema.Mutation = desc.(*graphqlc.ObjectTypeDefinitionDescriptorProto)
+			}
+			if desc, ok := fd.typeMap["Subscription"]; ok {
+				fd.FileDescriptorGraphql.Schema.Subscription = desc.(*graphqlc.ObjectTypeDefinitionDescriptorProto)
+			}
+		}
 	}
 }
 
