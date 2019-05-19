@@ -649,11 +649,10 @@ func buildValueDescriptor(value ast.Value) (graphqlc.ValueDescriptorProto_Value,
 			listValue.ListValue.Values = append(listValue.ListValue.Values, &graphqlc.ValueDescriptorProto{Value: newV})
 		}
 		return listValue, nil
-
 	case *ast.ObjectValue:
-		objValue := &graphqlc.ValueDescriptorProto_ObjectValue{}
+		objValue := &graphqlc.ValueDescriptorProto_ObjectValue{ObjectValue: &graphqlc.ObjectValueDescriptorProto{}}
 		for _, objV := range tVal.Fields {
-			newV, err := buildValueDescriptor(objV)
+			newV, err := buildValueDescriptor(objV.Value)
 			if err != nil {
 				return nil, err
 			}

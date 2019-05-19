@@ -1,0 +1,42 @@
+schema {
+  query: Query
+}
+
+scalar Timestamp
+
+scalar Point
+
+scalar Banned
+
+type Query {
+  user(id: ID!): User
+  search(input: SearchArgs = {}): [User!]!
+}
+
+type User {
+  id: ID!
+  name: String!
+  created: Timestamp
+  isBanned: Banned!
+  primitiveResolver: String!
+  customResolver: Point!
+  address: Address
+  tier: Tier
+}
+
+type Address {
+  id: ID!
+  location: Point
+}
+
+enum Tier {
+  A
+  B
+  C
+}
+
+input SearchArgs {
+  location: Point
+  createdAfter: Timestamp
+  isBanned: Banned
+}
