@@ -1,0 +1,35 @@
+schema {
+  query: MyQuery
+  mutation: MyMutation
+}
+
+directive @hasRole(role: Role!) on FIELD_DEFINITION
+
+scalar Map
+
+type MyQuery {
+  todo(id: ID!): Todo
+  lastTodo: Todo
+  todos: [Todo!]!
+}
+
+type MyMutation {
+  createTodo(todo: TodoInput!): Todo!
+  updateTodo(id: ID!, changes: Map!): Todo
+}
+
+type Todo {
+  id: ID!
+  text: String!
+  done: Boolean! @hasRole(role: OWNER)
+}
+
+enum Role {
+  ADMIN
+  OWNER
+}
+
+input TodoInput {
+  text: String!
+  done: Boolean
+}

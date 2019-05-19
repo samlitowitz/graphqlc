@@ -168,8 +168,15 @@ func (g *Generator) BuildTypes() {
 					g.Error(err)
 				}
 				fd.InputObjects = append(fd.InputObjects, desc)
+			case *ast.DirectiveDefinition:
+				desc := fd.typeMap[def.Name.Value].(*graphqlc.DirectiveDefinitionDescriptorProto)
+				err := buildDirectiveDefinitionDescriptor(fd, desc, def)
+				if err != nil {
+					g.Error(err)
+				}
+				fd.Directives = append(fd.Directives, desc)
 			default:
-				g.Fail("unknown type")
+				g.Error(fmt.Errorf("%s: unknown type %T", fd.Name, node))
 			}
 		}
 
@@ -263,15 +270,51 @@ func buildFileTypeMap(fd *FileDescriptor) error {
 			fd.typeMap[def.Name.Value] = new(graphqlc.EnumTypeDefinitionDescriptorProto)
 		case *ast.InputObjectDefinition:
 			fd.typeMap[def.Name.Value] = new(graphqlc.InputObjectTypeDefinitionDescriptorProto)
-
+		case *ast.DirectiveDefinition:
+			fd.typeMap[def.Name.Value] = new(graphqlc.DirectiveDefinitionDescriptorProto)
 		default:
-			return fmt.Errorf("unknown type")
+			return fmt.Errorf("%s: unknown type %T", fd.Name, node)
 		}
 	}
 	return nil
 }
 
 // Top level definitions
+func buildDirectiveDefinitionDescriptor(fd *FileDescriptor, desc *graphqlc.DirectiveDefinitionDescriptorProto, node *ast.DirectiveDefinition) error {
+	if node.Description != nil {
+		desc.Description = node.Description.Value
+	}
+	desc.Name = node.Name.Value
+
+	for _, argDef := range node.Arguments {
+		argDesc, err := buildInputValueDefinitionDescriptor(argDef)
+		if err != nil {
+			return err
+		}
+		desc.Arguments = append(desc.Arguments, argDesc)
+	}
+
+	for _, locDef := range node.Locations {
+		if v, ok := graphqlc.ExecutableDirectiveLocation_value[locDef.Value]; ok {
+			desc.Locations = append(desc.Locations, &graphqlc.DirectiveLocationDescriptorProto{
+				Location: &graphqlc.DirectiveLocationDescriptorProto_ExecutableLocation{
+					ExecutableLocation: graphqlc.ExecutableDirectiveLocation(v),
+				},
+			})
+		} else if v, ok := graphqlc.TypeSystemDirectiveLocation_value[locDef.Value]; ok {
+			desc.Locations = append(desc.Locations, &graphqlc.DirectiveLocationDescriptorProto{
+				Location: &graphqlc.DirectiveLocationDescriptorProto_TypeSystemLocation{
+					TypeSystemLocation: graphqlc.TypeSystemDirectiveLocation(v),
+				},
+			})
+		} else {
+			return fmt.Errorf("unknown directive loction %q", locDef.Value)
+		}
+	}
+
+	return nil
+}
+
 func buildEnumDefinitionDescriptor(fd *FileDescriptor, desc *graphqlc.EnumTypeDefinitionDescriptorProto, node *ast.EnumDefinition) error {
 	if node.Description != nil {
 		desc.Description = node.Description.Value
@@ -549,7 +592,7 @@ func buildTypeDescriptorProto(def ast.Type) (graphqlc.TypeDescriptorProto_Type, 
 		}
 		return typDesc, nil
 	default:
-		return nil, fmt.Errorf("unknown type")
+		return nil, fmt.Errorf("unknown type %T", def)
 	}
 	return nil, nil
 }

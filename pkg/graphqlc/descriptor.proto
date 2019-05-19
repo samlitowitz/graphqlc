@@ -16,6 +16,7 @@ message FileDescriptorGraphql {
 
     // All top-level definitions in this file.
     SchemaDescriptorProto schema = 2;
+    repeated DirectiveDefinitionDescriptorProto directives = 9;
     repeated ScalarTypeDefinitionDescriptorProto scalars = 3;
     repeated ObjectTypeDefinitionDescriptorProto objects = 4;
     repeated InterfaceTypeDefinitionDescriptorProto interfaces = 5;
@@ -29,6 +30,44 @@ message SchemaDescriptorProto {
     ObjectTypeDefinitionDescriptorProto query = 2;
     ObjectTypeDefinitionDescriptorProto mutation = 3;
     ObjectTypeDefinitionDescriptorProto subscription = 4;
+}
+
+message DirectiveDefinitionDescriptorProto {
+    string description = 1;
+    string name = 2;
+    repeated InputValueDefinitionDescriptorProto arguments = 3;
+    repeated DirectiveLocationDescriptorProto locations = 4;
+}
+
+message DirectiveLocationDescriptorProto {
+    oneof location {
+        ExecutableDirectiveLocation executable_location = 2;
+        TypeSystemDirectiveLocation type_system_location = 3;
+    }
+}
+
+enum ExecutableDirectiveLocation {
+    QUERY = 0;
+    MUTATION = 1;
+    SUBSCRIPTION = 2;
+    FIELD = 3;
+    FRAGMENT_DEFINITION = 4;
+    FRAGMENT_SPREAD = 5;
+    INLINE_FRAGMENT = 6;
+}
+
+enum TypeSystemDirectiveLocation {
+    SCHEMA = 0;
+    SCALAR = 1;
+    OBJECT = 2;
+    FIELD_DEFINITION = 3;
+    ARGUMENT_DEFINITION = 4;
+    INTERFACE = 5;
+    UNION = 6;
+    ENUM = 7;
+    ENUM_VALUE = 8;
+    INPUT_OBJECT = 9;
+    INPUT_FIELD_DEFINITION = 10;
 }
 
 message ScalarTypeDefinitionDescriptorProto {

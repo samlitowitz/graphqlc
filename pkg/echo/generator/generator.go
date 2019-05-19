@@ -77,6 +77,12 @@ func (g *Generator) generate(fd *graphqlc.FileDescriptorGraphql) error {
 	}
 	doc.Definitions = append(doc.Definitions, schemaDef)
 
+	directiveDefs, err := buildDirectiveDefinitions(fd.Directives)
+	if err != nil {
+		return err
+	}
+	doc.Definitions = append(doc.Definitions, directiveDefs...)
+
 	scalarDefs, err := buildScalarDefinitions(fd.Scalars)
 	if err != nil {
 		return err
@@ -147,6 +153,33 @@ func buildSchemaDefinition(desc *graphqlc.SchemaDescriptorProto) (*ast.SchemaDef
 	}
 
 	return def, nil
+}
+
+func buildDirectiveDefinitions(descs []*graphqlc.DirectiveDefinitionDescriptorProto) ([]ast.Node, error) {
+	var defs []ast.Node
+	for _, desc := range descs {
+		args, err := buildInputValueDefinitions(desc.Arguments)
+		if err != nil {
+			return nil, err
+		}
+		var locs []*ast.Name
+		for _, locDesc := range desc.Locations {
+			switch lval := locDesc.Location.(type) {
+			case *graphqlc.DirectiveLocationDescriptorProto_ExecutableLocation:
+				locs = append(locs, ast.NewName(&ast.Name{Value: graphqlc.ExecutableDirectiveLocation_name[int32(lval.ExecutableLocation)]}))
+			case *graphqlc.DirectiveLocationDescriptorProto_TypeSystemLocation:
+				locs = append(locs, ast.NewName(&ast.Name{Value: graphqlc.TypeSystemDirectiveLocation_name[int32(lval.TypeSystemLocation)]}))
+			}
+		}
+
+		defs = append(defs, ast.NewDirectiveDefinition(&ast.DirectiveDefinition{
+			Name:        ast.NewName(&ast.Name{Value: desc.Name}),
+			Description: ast.NewStringValue(&ast.StringValue{Value: desc.Description}),
+			Arguments:   args,
+			Locations:   locs,
+		}))
+	}
+	return defs, nil
 }
 
 func buildScalarDefinitions(descs []*graphqlc.ScalarTypeDefinitionDescriptorProto) ([]ast.Node, error) {
