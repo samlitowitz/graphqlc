@@ -3,4 +3,5 @@ package graphqlc
 type DirectiveLocationDescriptorProto_Location = isDirectiveLocationDescriptorProto_Location
 type NonNullTypeDescriptorProto_Type = isNonNullTypeDescriptorProto_Type
 type TypeDescriptorProto_Type = isTypeDescriptorProto_Type
+type TypeSystemExtensionDescriptorProto_Extension = isTypeSystemExtensionDescriptorProto_Extension
 type ValueDescriptorProto_Value = isValueDescriptorProto_Value
