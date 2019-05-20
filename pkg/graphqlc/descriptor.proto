@@ -16,6 +16,7 @@ message FileDescriptorGraphql {
 
     // All top-level definitions in this file.
     SchemaDescriptorProto schema = 2;
+    repeated TypeSystemExtensionDescriptorProto type_extensions = 10;
     repeated DirectiveDefinitionDescriptorProto directives = 9;
     repeated ScalarTypeDefinitionDescriptorProto scalars = 3;
     repeated ObjectTypeDefinitionDescriptorProto objects = 4;
@@ -76,9 +77,21 @@ message ScalarTypeDefinitionDescriptorProto {
     repeated DirectiveDescriptorProto directives = 3;
 }
 
+message ScalarTypeExtensionDescriptorProto {
+    string name = 1;
+    repeated DirectiveDescriptorProto directives = 2;
+}
+
 message ObjectTypeDefinitionDescriptorProto {
     string description = 1;
     string name = 2;
+    repeated InterfaceTypeDefinitionDescriptorProto implements = 3;
+    repeated DirectiveDescriptorProto directives = 4;
+    repeated FieldDefinitionDescriptorProto fields = 5;
+}
+
+message ObjectTypeExtensionDescriptorProto {
+    string name = 1;
     repeated InterfaceTypeDefinitionDescriptorProto implements = 3;
     repeated DirectiveDescriptorProto directives = 4;
     repeated FieldDefinitionDescriptorProto fields = 5;
@@ -91,11 +104,23 @@ message InterfaceTypeDefinitionDescriptorProto {
     repeated FieldDefinitionDescriptorProto fields = 4;
 }
 
+message InterfaceTypeExtensionDescriptorProto {
+    string name = 1;
+    repeated DirectiveDescriptorProto directives = 2;
+    repeated FieldDefinitionDescriptorProto fields = 3;
+}
+
 message UnionTypeDefinitionDescriptorProto {
     string description = 1;
     string name = 2;
     repeated DirectiveDescriptorProto directives = 3;
     repeated NamedTypeDescriptorProto member_types = 4;
+}
+
+message UnionTypeExtensionDefinitionDescriptorProto {
+    string name = 1;
+    repeated DirectiveDescriptorProto directives = 2;
+    repeated NamedTypeDescriptorProto member_types = 3;
 }
 
 message EnumTypeDefinitionDescriptorProto {
@@ -105,11 +130,46 @@ message EnumTypeDefinitionDescriptorProto {
     repeated EnumValueDefinitionDescription values = 4;
 }
 
+message EnumTypeExtensionDefinitionDescriptorProto {
+    string name = 1;
+    repeated DirectiveDescriptorProto directives = 2;
+    repeated EnumValueDefinitionDescription values = 3;
+}
+
 message InputObjectTypeDefinitionDescriptorProto {
     string description = 1;
     string name = 2;
     repeated DirectiveDescriptorProto directives = 3;
     repeated InputValueDefinitionDescriptorProto fields = 4;
+}
+
+message InputObjectTypeExtensionDefinitionDescriptorProto {
+    string name = 1;
+    repeated DirectiveDescriptorProto directives = 2;
+    repeated InputValueDefinitionDescriptorProto fields = 3;
+}
+
+message TypeSystemExtensionDescriptorProto {
+    oneof extension {
+        SchemaExtensionDescriptorProto schema_extension = 1;
+        TypeExtensionDescriptorProto type_extension = 2;
+    }
+}
+
+message SchemaExtensionDescriptorProto {
+    repeated DirectiveDescriptorProto directives = 1;
+    repeated NamedTypeDescriptorProto operation_type_definitions = 2;
+}
+
+message TypeExtensionDescriptorProto {
+    oneof type_extension {
+        ScalarTypeExtensionDescriptorProto scalar_type_extension = 1;
+        ObjectTypeExtensionDescriptorProto object_type_extension = 2;
+        InterfaceTypeExtensionDescriptorProto interface_type_extension = 3;
+        UnionTypeExtensionDefinitionDescriptorProto union_type_extension = 4;
+        EnumTypeExtensionDefinitionDescriptorProto enum_type_extions = 5;
+        InputObjectTypeExtensionDefinitionDescriptorProto input_object_type_extension = 6;
+    }
 }
 
 message EnumValueDefinitionDescription {
