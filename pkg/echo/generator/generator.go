@@ -17,10 +17,15 @@ import (
 	"github.com/samlitowitz/graphqlc/pkg/graphqlc/compiler"
 )
 
+// file rename function
+type FnRenameFile func(string) string
+
 type Generator struct {
 	*bytes.Buffer
 	Request  *compiler.CodeGeneratorRequest  // The input
 	Response *compiler.CodeGeneratorResponse // The output
+
+	FnRenameFile FnRenameFile // File renamer
 }
 
 func New() *Generator {
@@ -51,6 +56,10 @@ func (g *Generator) GenerateAllFiles() {
 		genFiles[file] = true
 	}
 
+	if g.FnRenameFile == nil {
+		g.FnRenameFile = graphqlEchoFileName
+	}
+
 	for _, fd := range g.Request.GraphqlFile {
 		if gen, ok := genFiles[fd.Name]; !ok || !gen {
 			continue
@@ -62,7 +71,7 @@ func (g *Generator) GenerateAllFiles() {
 			g.Error(err)
 		}
 		g.Response.File = append(g.Response.File, &compiler.CodeGeneratorResponse_File{
-			Name:    g.graphqlEchoFileName(fd.Name),
+			Name:    g.FnRenameFile(fd.Name),
 			Content: g.String(),
 		})
 	}
@@ -612,7 +621,7 @@ func buildValue(desc *graphqlc.ValueDescriptorProto) (ast.Value, error) {
 	return def, nil
 }
 
-func (g *Generator) graphqlEchoFileName(name string) string {
+func graphqlEchoFileName(name string) string {
 	if ext := path.Ext(name); ext == ".graphql" {
 		name = name[:len(name)-len(ext)]
 	}
