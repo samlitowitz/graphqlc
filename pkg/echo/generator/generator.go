@@ -39,14 +39,14 @@ func New() *Generator {
 // Error reports a problem, including an error, and exits the program.
 func (g *Generator) Error(err error, msgs ...string) {
 	s := strings.Join(msgs, " ") + ":" + err.Error()
-	log.Print("graphqlc-gen-test: error:", s)
+	log.Print("graphqlc-gen-echo: error:", s)
 	os.Exit(1)
 }
 
 // Fail reports a problem and exits the program.
 func (g *Generator) Fail(msgs ...string) {
 	s := strings.Join(msgs, " ")
-	log.Print("graphqlc-gen-test: error:", s)
+	log.Print("graphqlc-gen-echo: error:", s)
 	os.Exit(1)
 }
 

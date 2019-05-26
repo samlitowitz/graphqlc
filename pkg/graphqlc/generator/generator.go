@@ -1,8 +1,10 @@
 package generator
 
 import (
+	"bufio"
 	"bytes"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"os"
@@ -225,10 +227,32 @@ func (g *Generator) GenerateAllFiles() {
 			g.Error(err)
 		}
 
-		for _, file := range g.Response.File {
-			err := writeFile(meta.Path, file)
-			if err != nil {
-				g.Error(err)
+		for i, file := range g.Response.File {
+			switch {
+			// Append to previous file
+			case file.Name == "" && file.InsertionPoint == "":
+				if i < 1 {
+					g.Fail("unable to append to file, no previous file exists")
+				}
+				file.Name = g.Response.File[i-1].Name
+				err := appendPreviousFile(meta.Path, file)
+				if err != nil {
+					g.Error(err)
+				}
+			// Write new file
+			case file.Name != "" && file.InsertionPoint == "":
+				err := writeNewFile(meta.Path, file)
+				if err != nil {
+					g.Error(err)
+				}
+			// Write insertion point
+			case file.Name != "" && file.InsertionPoint != "":
+				err := writeInsertionPoint(meta.Path, file)
+				if err != nil {
+					g.Error(err)
+				}
+			case file.Name == "" && file.InsertionPoint != "":
+				g.Fail("insertion point defined, file name expected")
 			}
 		}
 	}
@@ -725,7 +749,52 @@ func parsePluginArgument(arg string) (suffix, params, path string) {
 	return arg[:eqLoc], arg[eqLoc+5 : cLoc], arg[cLoc+1:]
 }
 
-func writeFile(path string, file *compiler.CodeGeneratorResponse_File) error {
+func appendPreviousFile(path string, file *compiler.CodeGeneratorResponse_File) error {
+	qualifiedName := filepath.Join(path, file.Name)
+	f, err := os.OpenFile(qualifiedName, os.O_RDWR|os.O_APPEND, 0755)
+	if err != nil {
+		return err
+	}
+	_, err = f.WriteString(file.Content)
+	if err != nil {
+		return err
+	}
+	return f.Close()
+}
+
+func writeInsertionPoint(path string, file *compiler.CodeGeneratorResponse_File) error {
+	qualifiedName := filepath.Join(path, file.Name)
+	r, err := os.OpenFile(qualifiedName, os.O_RDWR, 0755)
+	if err != nil {
+		return err
+	}
+	w, err := os.Create(qualifiedName + ".tmp")
+	if err != nil {
+		r.Close()
+		return err
+	}
+
+	insertionPointActual := fmt.Sprintf(insertionPointText, file.InsertionPoint)
+	reader := bufio.NewReader(r)
+	for line, err := reader.ReadString('\n'); err == nil; line, err = reader.ReadString('\n') {
+		if i := strings.Index(line, insertionPointActual); i != -1 {
+			w.WriteString(line[:i+1] + file.Content + "\n")
+		}
+		w.WriteString(line)
+	}
+	if err != nil && err != io.EOF {
+		r.Close()
+		w.Close()
+		return err
+	}
+
+	r.Close()
+	w.Close()
+
+	return os.Rename(qualifiedName+".tmp", qualifiedName)
+}
+
+func writeNewFile(path string, file *compiler.CodeGeneratorResponse_File) error {
 	qualifiedName := filepath.Join(path, file.Name)
 	err := os.MkdirAll(filepath.Dir(qualifiedName), 0755)
 	if err != nil {
@@ -741,3 +810,5 @@ func writeFile(path string, file *compiler.CodeGeneratorResponse_File) error {
 	}
 	return f.Close()
 }
+
+const insertionPointText = " @@graphqlc_insertion_point(%s)"
