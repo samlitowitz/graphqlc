@@ -3,10 +3,6 @@ schema {
   mutation: MyMutation
 }
 
-directive @hasRole(role: Role!) on FIELD_DEFINITION
-
-scalar Map
-
 type MyQuery {
   todo(id: ID!): Todo
   lastTodo: Todo
@@ -24,12 +20,16 @@ type Todo {
   done: Boolean! @hasRole(role: OWNER)
 }
 
-enum Role {
-  ADMIN
-  OWNER
-}
-
 input TodoInput {
   text: String!
   done: Boolean
+}
+
+directive @hasRole(role: Role!) on FIELD_DEFINITION
+
+scalar Map
+
+enum Role {
+  ADMIN
+  OWNER
 }

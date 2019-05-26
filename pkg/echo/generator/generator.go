@@ -86,23 +86,17 @@ func (g *Generator) generate(fd *graphqlc.FileDescriptorGraphql) error {
 	}
 	doc.Definitions = append(doc.Definitions, schemaDef)
 
-	directiveDefs, err := buildDirectiveDefinitions(fd.Directives)
-	if err != nil {
-		return err
-	}
-	doc.Definitions = append(doc.Definitions, directiveDefs...)
-
-	scalarDefs, err := buildScalarDefinitions(fd.Scalars)
-	if err != nil {
-		return err
-	}
-	doc.Definitions = append(doc.Definitions, scalarDefs...)
-
 	objectDefs, err := buildObjectTypeDefinitions(fd.Objects)
 	if err != nil {
 		return err
 	}
 	doc.Definitions = append(doc.Definitions, objectDefs...)
+
+	inputObjectDefs, err := buildInputObjectDefinitions(fd.InputObjects)
+	if err != nil {
+		return err
+	}
+	doc.Definitions = append(doc.Definitions, inputObjectDefs...)
 
 	interfaceDefs, err := buildInterfaceDefinitions(fd.Interfaces)
 	if err != nil {
@@ -116,17 +110,23 @@ func (g *Generator) generate(fd *graphqlc.FileDescriptorGraphql) error {
 	}
 	doc.Definitions = append(doc.Definitions, unionDefs...)
 
+	directiveDefs, err := buildDirectiveDefinitions(fd.Directives)
+	if err != nil {
+		return err
+	}
+	doc.Definitions = append(doc.Definitions, directiveDefs...)
+
+	scalarDefs, err := buildScalarDefinitions(fd.Scalars)
+	if err != nil {
+		return err
+	}
+	doc.Definitions = append(doc.Definitions, scalarDefs...)
+
 	enumDefs, err := buildEnumDefinitions(fd.Enums)
 	if err != nil {
 		return err
 	}
 	doc.Definitions = append(doc.Definitions, enumDefs...)
-
-	inputObjectDefs, err := buildInputObjectDefinitions(fd.InputObjects)
-	if err != nil {
-		return err
-	}
-	doc.Definitions = append(doc.Definitions, inputObjectDefs...)
 
 	data, _ := printer.Print(doc).(string)
 	g.WriteString(data)

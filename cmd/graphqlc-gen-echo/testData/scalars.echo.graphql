@@ -2,12 +2,6 @@ schema {
   query: Query
 }
 
-scalar Timestamp
-
-scalar Point
-
-scalar Banned
-
 type Query {
   user(id: ID!): User
   search(input: SearchArgs = {}): [User!]!
@@ -29,14 +23,20 @@ type Address {
   location: Point
 }
 
-enum Tier {
-  A
-  B
-  C
-}
-
 input SearchArgs {
   location: Point
   createdAfter: Timestamp
   isBanned: Banned
+}
+
+scalar Timestamp
+
+scalar Point
+
+scalar Banned
+
+enum Tier {
+  A
+  B
+  C
 }

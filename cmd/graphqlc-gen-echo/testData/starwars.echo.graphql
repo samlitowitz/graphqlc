@@ -3,8 +3,6 @@ schema {
   mutation: Mutation
 }
 
-scalar Time
-
 type Query {
   hero(episode: Episode = NEWHOPE): Character
   reviews(episode: Episode!, since: Time): [Review!]!
@@ -70,6 +68,12 @@ type Starship {
   history: [[Int!]!]!
 }
 
+input ReviewInput {
+  stars: Int!
+  commentary: String
+  time: Time
+}
+
 interface Character {
   id: ID!
   name: String!
@@ -80,6 +84,8 @@ interface Character {
 
 union SearchResult = Human | Droid | Starship
 
+scalar Time
+
 enum Episode {
   NEWHOPE
   EMPIRE
@@ -89,10 +95,4 @@ enum Episode {
 enum LengthUnit {
   METER
   FOOT
-}
-
-input ReviewInput {
-  stars: Int!
-  commentary: String
-  time: Time
 }
