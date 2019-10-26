@@ -1,3 +1,2 @@
-//go:generate protoc -I./pkg --go_out=paths=source_relative:./pkg pkg/graphqlc/descriptor.proto
-//go:generate protoc -I./pkg --go_out=paths=source_relative:./pkg pkg/graphqlc/compiler/plugin.proto
+//go:generate protoc -I./api/protobuf --go_out=paths=source_relative:./pkg/graphqlc api/protobuf/descriptor.proto api/protobuf/plugin.proto
 package graphqlc

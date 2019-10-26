@@ -1,4 +1,4 @@
-package generator
+package compiler
 
 import (
 	"bufio"
@@ -6,22 +6,16 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strconv"
 	"strings"
 
-	"github.com/graphql-go/graphql/language/ast"
-
-	"github.com/graphql-go/graphql/language/parser"
-
 	"github.com/golang/protobuf/proto"
-
+	"github.com/graphql-go/graphql/language/ast"
+	"github.com/graphql-go/graphql/language/parser"
 	"github.com/samlitowitz/graphqlc/pkg/graphqlc"
-
-	"github.com/samlitowitz/graphqlc/pkg/graphqlc/compiler"
 )
 
 // because Google did it with protobuf/
@@ -43,8 +37,7 @@ type PluginMeta struct {
 }
 
 type Generator struct {
-	Request  *compiler.CodeGeneratorRequest
-	Response *compiler.CodeGeneratorResponse
+	*graphqlc.Generator
 
 	PluginParams map[string]*PluginMeta // Map from plugin suffix to parameters
 
@@ -54,23 +47,9 @@ type Generator struct {
 
 func New() *Generator {
 	g := new(Generator)
-	g.Request = new(compiler.CodeGeneratorRequest)
-	g.Response = new(compiler.CodeGeneratorResponse)
+	g.Generator = graphqlc.New()
+	g.LogPrefix = "graphqlc"
 	return g
-}
-
-// Error reports a problem, including an error, and exits the program.
-func (g *Generator) Error(err error, msgs ...string) {
-	s := strings.Join(msgs, " ") + ":" + err.Error()
-	log.Print("graphqlc: error:", s)
-	os.Exit(1)
-}
-
-// Fail reports a problem and exits the program.
-func (g *Generator) Fail(msgs ...string) {
-	s := strings.Join(msgs, " ")
-	log.Print("graphqlc: error:", s)
-	os.Exit(1)
 }
 
 func (g *Generator) CommandLineArguments(arguments []string) {
@@ -186,6 +165,15 @@ func (g *Generator) BuildTypes() {
 			fd.FileDescriptorGraphql.Schema = &graphqlc.SchemaDescriptorProto{}
 			if desc, ok := fd.typeMap["Query"]; ok {
 				fd.FileDescriptorGraphql.Schema.Query = desc.(*graphqlc.ObjectTypeDefinitionDescriptorProto)
+			} else {
+				queryDef := &graphqlc.ObjectTypeDefinitionDescriptorProto{
+					Name:       "Query",
+					Implements: []*graphqlc.InterfaceTypeDefinitionDescriptorProto{},
+					Directives: []*graphqlc.DirectiveDescriptorProto{},
+					Fields:     []*graphqlc.FieldDefinitionDescriptorProto{},
+				}
+				fd.FileDescriptorGraphql.Objects = append(fd.FileDescriptorGraphql.Objects, queryDef)
+				fd.FileDescriptorGraphql.Schema.Query = queryDef
 			}
 			if desc, ok := fd.typeMap["Mutation"]; ok {
 				fd.FileDescriptorGraphql.Schema.Mutation = desc.(*graphqlc.ObjectTypeDefinitionDescriptorProto)
@@ -259,8 +247,8 @@ func (g *Generator) GenerateAllFiles() {
 }
 
 func (g *Generator) buildRequest() {
-	g.Request = new(compiler.CodeGeneratorRequest)
-	g.Request.CompilerVersion = &compiler.Version{
+	g.Request = new(graphqlc.CodeGeneratorRequest)
+	g.Request.CompilerVersion = &graphqlc.Version{
 		Major:  GRAPHQLC_VERSION / 1000000,
 		Minor:  GRAPHQLC_VERSION / 1000 % 1000,
 		Patch:  GRAPHQLC_VERSION % 1000,
@@ -749,7 +737,7 @@ func parsePluginArgument(arg string) (suffix, params, path string) {
 	return arg[:eqLoc], arg[eqLoc+5 : cLoc], arg[cLoc+1:]
 }
 
-func appendPreviousFile(path string, file *compiler.CodeGeneratorResponse_File) error {
+func appendPreviousFile(path string, file *graphqlc.CodeGeneratorResponse_File) error {
 	qualifiedName := filepath.Join(path, file.Name)
 	f, err := os.OpenFile(qualifiedName, os.O_RDWR|os.O_APPEND, 0755)
 	if err != nil {
@@ -762,7 +750,7 @@ func appendPreviousFile(path string, file *compiler.CodeGeneratorResponse_File) 
 	return f.Close()
 }
 
-func writeInsertionPoint(path string, file *compiler.CodeGeneratorResponse_File) error {
+func writeInsertionPoint(path string, file *graphqlc.CodeGeneratorResponse_File) error {
 	qualifiedName := filepath.Join(path, file.Name)
 	r, err := os.OpenFile(qualifiedName, os.O_RDWR, 0755)
 	if err != nil {
@@ -794,7 +782,7 @@ func writeInsertionPoint(path string, file *compiler.CodeGeneratorResponse_File)
 	return os.Rename(qualifiedName+".tmp", qualifiedName)
 }
 
-func writeNewFile(path string, file *compiler.CodeGeneratorResponse_File) error {
+func writeNewFile(path string, file *graphqlc.CodeGeneratorResponse_File) error {
 	qualifiedName := filepath.Join(path, file.Name)
 	err := os.MkdirAll(filepath.Dir(qualifiedName), 0755)
 	if err != nil {

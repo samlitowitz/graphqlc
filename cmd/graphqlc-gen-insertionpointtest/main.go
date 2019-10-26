@@ -1,16 +1,15 @@
 package main
 
 import (
+	"github.com/samlitowitz/graphqlc/internal/pkg/insertionpointtest"
 	"io/ioutil"
 	"os"
-
-	"github.com/samlitowitz/graphqlc/internal/pkg/insertionpointtest/generator"
 
 	"github.com/golang/protobuf/proto"
 )
 
 func main() {
-	g := generator.New()
+	g := insertionpointtest.New()
 
 	data, err := ioutil.ReadAll(os.Stdin)
 	if err != nil {

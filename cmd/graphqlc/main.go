@@ -1,14 +1,13 @@
 package main
 
 import (
+	"github.com/samlitowitz/graphqlc/pkg/graphqlc/compiler"
 	"os"
-
-	"github.com/samlitowitz/graphqlc/pkg/graphqlc/generator"
 )
 
 func main() {
 
-	g := generator.New()
+	g := compiler.New()
 
 	g.CommandLineArguments(os.Args[1:])
 

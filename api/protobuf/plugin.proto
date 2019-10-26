@@ -2,9 +2,9 @@ syntax = "proto3";
 
 package graphqlc.compiler;
 
-option go_package = "compiler";
+option go_package = "github.com/samlitowitz/graphqlc/pkg/graphqlc;graphqlc";
 
-import "graphqlc/descriptor.proto";
+import "descriptor.proto";
 
 // The version number of protocol compiler
 message Version {

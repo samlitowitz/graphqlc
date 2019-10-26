@@ -6,20 +6,18 @@
  The project attempts to adhere to `protoc` standards whenever possible.
  
  ## Supported
-   * `protoc` style plugins and parameter passing (pkg/graphqlc/plugin.proto)
+   * `protoc` style plugins and parameter passing
    * `protoc` style insertion points 
+
+See [api/protobuf](api/protobuf) for specification.
  
  # Installation
  `go get -u github.com/samlitowitz/graphqlc/cmd/graphqlc`
  
  # Usage
- Install `graphqlc-gen-echo` plugin. 
- This plugin generates a new schema from the input schema renaming it `*.echo.graphql`, e.g. `schema.graphql` becomes `schema.echo.graphql`.
- 
- `go get -u github.com/samlitowitz/graphqlc/cmd/graphqlc-gen-echo`
- 
- `graphqlc --echo_out=. path/to/*.graphql`
- 
- 
+ Install `graphqlc-gen-*` plugin.
 
-https://graphql.github.io/graphql-spec/June2018/
+ `graphqlc --*_out=. path/to/*.graphql`
+ 
+# Reference
+1. [GraphQL Specification](https://graphql.github.io/graphql-spec/June2018/)
