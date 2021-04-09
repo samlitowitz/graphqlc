@@ -20,10 +20,13 @@ import (
 
 // because Google did it with protobuf/
 // major * 10^6 + minor * 10^3 + patch
-const GRAPHQLC_VERSION = 0000000
+const major = 1
+const minor = 0
+const patch = 0
+const GRAPHQLC_VERSION = major * 1000000 + minor * 1000 + patch
 
 // A suffix string for alpha, beta or rc releases. Empty for stable releases.
-const GRAPHQLC_VERSION_SUFFIX = "alpha"
+const GRAPHQLC_VERSION_SUFFIX = ""
 
 type FileDescriptor struct {
 	*graphqlc.FileDescriptorGraphql
